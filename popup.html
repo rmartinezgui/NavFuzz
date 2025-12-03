@@ -6,10 +6,48 @@
     body { 
       width: 320px; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      padding: 15px; 
+      padding: 0; 
+      margin: 0;
       background-color: #f4f4f9;
     }
-    h3 { margin-top: 0; color: #333; }
+    .header {
+      padding: 15px 15px 5px 15px;
+    }
+    h3 { margin-top: 0; color: #333; margin-bottom: 10px; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: #e9ecef;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #dde2e6; }
+    .tab-btn.active {
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+      background: white;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 15px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Scanner Styles */
     #target { 
       font-size: 0.9em; 
       color: #666; 
@@ -35,7 +73,8 @@
     #results li:last-child { border-bottom: none; }
     .found { color: #28a745; font-weight: bold; text-decoration: none; }
     .status-code { color: #888; font-size: 0.85em; }
-    button { 
+    
+    .action-btn { 
       width: 100%; 
       padding: 10px; 
       cursor: pointer; 
@@ -46,28 +85,87 @@
       font-weight: bold;
       transition: background 0.3s;
     }
-    button:hover { background-color: #0056b3; }
-    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    .action-btn:hover { background-color: #0056b3; }
+    .action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    
     #status { margin-top: 10px; font-size: 0.85em; color: #555; min-height: 1.2em;}
+
+    /* Options Styles */
+    .option-item {
+      background: white;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    .option-item label {
+      cursor: pointer;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .option-item input { margin-right: 10px; }
   </style>
 </head>
 <body>
-  <h3>🔍 NavFuzz Directory Scanner</h3>
-  <div id="target">Target: Detectando...</div>
-  
-  <button id="startBtn">Iniciar Fuzzing</button>
-  
-  <div id="stats-container" style="display: none; margin-top: 10px; font-size: 0.8em; color: #555; background: #e9ecef; padding: 8px; border-radius: 4px;">
-    <div style="display: flex; justify-content: space-between;">
-      <span>Progreso: <b id="progressVal">0/0</b></span>
-      <span>Tiempo: <b id="timeVal">0s</b></span>
-    </div>
-    <div style="margin-top: 4px;">Velocidad: <b id="speedVal">0</b> req/s</div>
+  <div class="header">
+    <h3>🔍 NavFuzz</h3>
   </div>
 
-  <div id="status">Listo para escanear</div>
-  
-  <ul id="results"></ul>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="scanner">Scanner</button>
+    <button class="tab-btn" data-tab="options">Opciones</button>
+  </div>
+
+  <!-- Tab Scanner -->
+  <div id="scanner" class="tab-content active">
+    <div id="target">Target: Detectando...</div>
+    
+    <button id="startBtn" class="action-btn">Iniciar Fuzzing</button>
+    
+    <div id="stats-container" style="display: none; margin-top: 10px; font-size: 0.8em; color: #555; background: #e9ecef; padding: 8px; border-radius: 4px;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>Progreso: <b id="progressVal">0/0</b></span>
+        <span>Tiempo: <b id="timeVal">0s</b></span>
+      </div>
+      <div style="margin-top: 4px;">Velocidad: <b id="speedVal">0</b> req/s</div>
+    </div>
+
+    <div id="status">Listo para escanear</div>
+    
+    <ul id="results"></ul>
+  </div>
+
+  <!-- Tab Opciones -->
+  <div id="options" class="tab-content">
+    <p style="margin-top: 0; color: #666; font-size: 0.9em;">Selecciona los códigos de estado a reportar:</p>
+    
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="200"> 200 (OK)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="301"> 301 (Moved Permanently)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="302"> 302 (Found)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="401"> 401 (Unauthorized)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="403"> 403 (Forbidden)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="status-code" value="500"> 500 (Server Error)</label></div>
+
+    <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Extensiones a probar:</p>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=""> (sin extensión)</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".php"> .php</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".html"> .html</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".txt"> .txt</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".json"> .json</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".js"> .js</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".bak"> .bak</label></div>
+    <div class="option-item"><label><input type="checkbox" class="extension" value=".zip"> .zip</label></div>
+
+    <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Velocidad (Rate Limit):</p>
+    <div class="option-item" style="display: block;">
+      <label style="margin-bottom: 5px; display: block;">Concurrencia máxima:</label>
+      <input type="range" id="concurrency" min="1" max="50" value="10" style="width: 100%;">
+      <div style="text-align: right; font-size: 0.85em; color: #555;"><span id="concurrencyVal">10</span> hilos</div>
+    </div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

@@ -1,13 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="button.css" />
-  </head>
-  <body>
-    <div id="buttonDiv"></div>
-    <div>
-      <p>Choose a different background color!</p>
-    </div>
-    <script src="options.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>NavFuzz Options</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 500px; }
+    h2 { color: #333; }
+    .option-group { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+    label { display: block; margin-bottom: 8px; cursor: pointer; }
+    input[type="checkbox"] { margin-right: 10px; }
+    button { padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    #status { margin-top: 10px; color: green; font-weight: bold; opacity: 0; transition: opacity 0.5s; }
+  </style>
+</head>
+<body>
+  <h2>Configuración de NavFuzz</h2>
+  
+  <div class="option-group">
+    <h3>Códigos de Estado a Reportar</h3>
+    <p>Selecciona qué códigos HTTP consideras como "encontrados":</p>
+    
+    <label><input type="checkbox" class="status-code" value="200" checked> 200 (OK)</label>
+    <label><input type="checkbox" class="status-code" value="301"> 301 (Moved Permanently)</label>
+    <label><input type="checkbox" class="status-code" value="302"> 302 (Found)</label>
+    <label><input type="checkbox" class="status-code" value="401"> 401 (Unauthorized)</label>
+    <label><input type="checkbox" class="status-code" value="403" checked> 403 (Forbidden)</label>
+    <label><input type="checkbox" class="status-code" value="500"> 500 (Internal Server Error)</label>
+  </div>
+
+  <button id="save">Guardar Configuración</button>
+  <div id="status">Guardado correctamente</div>
+
+  <script src="options.js"></script>
+</body>
 </html>

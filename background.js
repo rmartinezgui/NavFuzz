@@ -31,39 +31,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 async function startScan(baseUrl, tabId) {
   if (activeScans[tabId] && activeScans[tabId].status === 'running') return;
 
+  // Obtener configuración
+  const { allowedStatuses, allowedExtensions, concurrency } = await chrome.storage.sync.get({ 
+    allowedStatuses: [200, 403],
+    allowedExtensions: [''],
+    concurrency: 10
+  });
+
+  // Generar lista de tareas (combinación de palabras y extensiones)
+  const tasks = [];
+  for (const word of wordlist) {
+    for (const ext of allowedExtensions) {
+      tasks.push({ word, ext });
+    }
+  }
+
   activeScans[tabId] = {
     status: 'running',
     completed: 0,
-    total: wordlist.length,
+    total: tasks.length,
     results: [],
     startTime: Date.now()
   };
 
   const scanState = activeScans[tabId];
 
-  const promises = wordlist.map(async (word) => {
-    const targetUrl = `${baseUrl}/${word}`;
+  // Implementación de cola con concurrencia limitada
+  let currentIndex = 0;
+  const activePromises = [];
+
+  const processNext = async () => {
+    if (currentIndex >= tasks.length) return;
+
+    const { word, ext } = tasks[currentIndex++];
+    const targetUrl = `${baseUrl}/${word}${ext}`;
+
     try {
       const response = await fetch(targetUrl, { method: 'HEAD' });
       
-      if (response.ok || response.status === 403) {
-        const result = { word, status: response.status, url: targetUrl, timestamp: Date.now() };
+      if (allowedStatuses.includes(response.status)) {
+        const result = { word: word + ext, status: response.status, url: targetUrl, timestamp: Date.now() };
         scanState.results.push(result);
         
-        // Notificar al popup si está abierto
         chrome.runtime.sendMessage({
           action: 'scan_update',
           tabId: tabId,
           type: 'found',
           data: result
-        }).catch(() => {}); // Ignorar error si popup cerrado
+        }).catch(() => {});
       }
     } catch (error) {
       // Error de red
     } finally {
       scanState.completed++;
       
-      // Notificar progreso (opcional: hacer throttling para no saturar)
       chrome.runtime.sendMessage({
         action: 'scan_update',
         tabId: tabId,
@@ -73,9 +94,27 @@ async function startScan(baseUrl, tabId) {
         startTime: scanState.startTime
       }).catch(() => {});
     }
-  });
+  };
 
-  await Promise.all(promises);
+  // Bucle principal de ejecución
+  while (currentIndex < tasks.length) {
+    // Rellenar la cola hasta el límite de concurrencia
+    while (activePromises.length < concurrency && currentIndex < tasks.length) {
+      const promise = processNext().then(() => {
+        // Eliminar promesa terminada de la lista
+        activePromises.splice(activePromises.indexOf(promise), 1);
+      });
+      activePromises.push(promise);
+    }
+    
+    // Esperar a que termine al menos una promesa antes de continuar
+    if (activePromises.length > 0) {
+      await Promise.race(activePromises);
+    }
+  }
+
+  // Esperar a que terminen las últimas promesas
+  await Promise.all(activePromises);
   
   scanState.status = 'complete';
   

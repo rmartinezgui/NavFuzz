@@ -7,6 +7,70 @@ const progressVal = document.getElementById('progressVal');
 const timeVal = document.getElementById('timeVal');
 const speedVal = document.getElementById('speedVal');
 
+// Gestión de Tabs
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Quitar active de todos
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    
+    // Activar el seleccionado
+    btn.classList.add('active');
+    const tabId = btn.getAttribute('data-tab');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+// Gestión de opciones de filtrado
+const checkboxes = document.querySelectorAll('.status-code');
+const extCheckboxes = document.querySelectorAll('.extension');
+const concurrencyInput = document.getElementById('concurrency');
+const concurrencyVal = document.getElementById('concurrencyVal');
+
+// Cargar configuración inicial y añadir listeners
+chrome.storage.sync.get({ 
+  allowedStatuses: [200, 403], 
+  allowedExtensions: [''],
+  concurrency: 10 
+}, (items) => {
+  // Status Codes
+  checkboxes.forEach((checkbox) => {
+    checkbox.checked = items.allowedStatuses.includes(parseInt(checkbox.value));
+    checkbox.addEventListener('change', saveOptions);
+  });
+
+  // Extensions
+  extCheckboxes.forEach((checkbox) => {
+    checkbox.checked = items.allowedExtensions.includes(checkbox.value);
+    checkbox.addEventListener('change', saveOptions);
+  });
+
+  // Concurrency
+  concurrencyInput.value = items.concurrency;
+  concurrencyVal.textContent = items.concurrency;
+  concurrencyInput.addEventListener('input', (e) => {
+    concurrencyVal.textContent = e.target.value;
+    saveOptions();
+  });
+});
+
+function saveOptions() {
+  const allowedStatuses = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => parseInt(cb.value));
+    
+  const allowedExtensions = Array.from(extCheckboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+  
+  const concurrency = parseInt(concurrencyInput.value);
+  
+  chrome.storage.sync.set({ allowedStatuses, allowedExtensions, concurrency });
+}
+
 let currentTab = null;
 
 // Inicialización
