@@ -1,6 +1,8 @@
 # NavFuzz
 Este proyecto ha sido desarrollado para la hackathon **Cyber Arena 2025 - Hackathon Interuniversitario de Ciberseguridad** organizado por la EUPT.
-
+Creado por:
+Mario Borque https://github.com/Mario-Borque
+Raúl Martínez https://github.com/rmartinezgui
 ## Problema
 En los ejercicios de auditoria de seguridad Web, es una práctica común el hacer FUZZING, que consiste en probar rutas en la URL para encontrar recursos comprometidos que no deberian estar visibles al público, ya que pueden ser vulnerabilidades o exponer datos confidenciales que pueden suponer grandes riesgos.
 
