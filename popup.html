@@ -1,10 +1,65 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="button.css" />
-  </head>
-  <body>
-    <button id="changeColor"></button>
-    <script src="popup.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { 
+      width: 320px; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 15px; 
+      background-color: #f4f4f9;
+    }
+    h3 { margin-top: 0; color: #333; }
+    #target { 
+      font-size: 0.9em; 
+      color: #666; 
+      margin-bottom: 10px; 
+      word-break: break-all; 
+    }
+    #results { 
+      margin-top: 15px; 
+      padding: 0;
+      list-style: none;
+      max-height: 250px; 
+      overflow-y: auto; 
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #results li {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+    #results li:last-child { border-bottom: none; }
+    .found { color: #28a745; font-weight: bold; text-decoration: none; }
+    .status-code { color: #888; font-size: 0.85em; }
+    button { 
+      width: 100%; 
+      padding: 10px; 
+      cursor: pointer; 
+      background-color: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 4px; 
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    button:hover { background-color: #0056b3; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+    #status { margin-top: 10px; font-size: 0.85em; color: #555; min-height: 1.2em;}
+  </style>
+</head>
+<body>
+  <h3>🔍 NavFuzz Directory Scanner</h3>
+  <div id="target">Target: Detectando...</div>
+  
+  <button id="startBtn">Iniciar Fuzzing</button>
+  <div id="status">Listo para escanear</div>
+  
+  <ul id="results"></ul>
+
+  <script src="popup.js"></script>
+</body>
 </html>
