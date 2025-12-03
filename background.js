@@ -32,21 +32,37 @@ async function startScan(baseUrl, tabId) {
   if (activeScans[tabId] && activeScans[tabId].status === 'running') return;
 
   // Obtener configuración
-  const { allowedStatuses, allowedExtensions, concurrency } = await chrome.storage.sync.get({ 
+  const { allowedStatuses, allowedExtensions, concurrency, scanMode } = await chrome.storage.sync.get({ 
     allowedStatuses: [200, 403],
     allowedExtensions: [''],
-    concurrency: 10
+    concurrency: 10,
+    scanMode: 'dir'
   });
 
   // Obtener wordlist (custom o default)
   const { customWordlist } = await chrome.storage.session.get(['customWordlist']);
   const currentWordlist = customWordlist || wordlist;
 
-  // Generar lista de tareas (combinación de palabras y extensiones)
+  // Generar lista de tareas
   const tasks = [];
-  for (const word of currentWordlist) {
-    for (const ext of allowedExtensions) {
-      tasks.push({ word, ext });
+  
+  if (scanMode === 'sub') {
+    // Modo Subdominios: word.domain.com
+    const urlObj = new URL(baseUrl);
+    let domain = urlObj.hostname;
+    if (domain.startsWith('www.')) {
+      domain = domain.substring(4);
+    }
+    
+    for (const word of currentWordlist) {
+      tasks.push({ word, type: 'sub', domain, protocol: urlObj.protocol });
+    }
+  } else {
+    // Modo Directorios: domain.com/word.ext
+    for (const word of currentWordlist) {
+      for (const ext of allowedExtensions) {
+        tasks.push({ word, ext, type: 'dir' });
+      }
     }
   }
 
@@ -67,14 +83,23 @@ async function startScan(baseUrl, tabId) {
   const processNext = async () => {
     if (currentIndex >= tasks.length) return;
 
-    const { word, ext } = tasks[currentIndex++];
-    const targetUrl = `${baseUrl}/${word}${ext}`;
+    const task = tasks[currentIndex++];
+    let targetUrl;
+    let displayWord;
+
+    if (task.type === 'sub') {
+      targetUrl = `${task.protocol}//${task.word}.${task.domain}`;
+      displayWord = `${task.word}.${task.domain}`;
+    } else {
+      targetUrl = `${baseUrl}/${task.word}${task.ext}`;
+      displayWord = `/${task.word}${task.ext}`;
+    }
 
     try {
       const response = await fetch(targetUrl, { method: 'HEAD' });
       
       if (allowedStatuses.includes(response.status)) {
-        const result = { word: word + ext, status: response.status, url: targetUrl, timestamp: Date.now() };
+        const result = { word: displayWord, status: response.status, url: targetUrl, timestamp: Date.now() };
         scanState.results.push(result);
         
         chrome.runtime.sendMessage({
@@ -85,7 +110,8 @@ async function startScan(baseUrl, tabId) {
         }).catch(() => {});
       }
     } catch (error) {
-      // Error de red
+      // Error de red (DNS error, timeout, etc)
+      // console.debug(`Error fetching ${targetUrl}:`, error);
     } finally {
       scanState.completed++;
       

@@ -43,6 +43,7 @@ subTabBtns.forEach(btn => {
 const checkboxes = document.querySelectorAll('.status-code');
 const extCheckboxes = document.querySelectorAll('.extension');
 const concurrencyInput = document.getElementById('concurrency');
+const scanModeRadios = document.querySelectorAll('input[name="scanMode"]');
 const customDictFile = document.getElementById('customDictFile');
 const dictStatus = document.getElementById('dictStatus');
 const resetDictBtn = document.getElementById('resetDictBtn');
@@ -51,7 +52,8 @@ const resetDictBtn = document.getElementById('resetDictBtn');
 chrome.storage.sync.get({ 
   allowedStatuses: [200, 403], 
   allowedExtensions: [''],
-  concurrency: 10 
+  concurrency: 10,
+  scanMode: 'dir'
 }, (items) => {
   // Status Codes
   checkboxes.forEach((checkbox) => {
@@ -68,6 +70,12 @@ chrome.storage.sync.get({
   // Concurrency
   concurrencyInput.value = items.concurrency;
   concurrencyInput.addEventListener('change', saveOptions);
+
+  // Scan Mode
+  scanModeRadios.forEach((radio) => {
+    radio.checked = radio.value === items.scanMode;
+    radio.addEventListener('change', saveOptions);
+  });
 });
 
 // Cargar estado del diccionario
@@ -126,7 +134,9 @@ function saveOptions() {
   
   const concurrency = parseInt(concurrencyInput.value);
   
-  chrome.storage.sync.set({ allowedStatuses, allowedExtensions, concurrency });
+  const scanMode = Array.from(scanModeRadios).find(r => r.checked).value;
+  
+  chrome.storage.sync.set({ allowedStatuses, allowedExtensions, concurrency, scanMode });
 }
 
 let currentTab = null;
@@ -233,7 +243,13 @@ function addResult(word, status, url) {
   const link = document.createElement('a');
   link.href = url;
   link.target = '_blank';
-  link.textContent = `/${word}`;
+  // Si empieza por http, es un subdominio completo, si no, es una ruta relativa
+  link.textContent = word.startsWith('http') ? word : (word.startsWith('/') ? word : `/${word}`);
+  // Limpiar visualización para subdominios
+  if (word.includes('.')) {
+     link.textContent = word;
+  }
+  
   link.className = 'found';
   
   const statusSpan = document.createElement('span');
