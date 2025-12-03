@@ -28,7 +28,9 @@ tabBtns.forEach(btn => {
 const checkboxes = document.querySelectorAll('.status-code');
 const extCheckboxes = document.querySelectorAll('.extension');
 const concurrencyInput = document.getElementById('concurrency');
-const concurrencyVal = document.getElementById('concurrencyVal');
+const customDictFile = document.getElementById('customDictFile');
+const dictStatus = document.getElementById('dictStatus');
+const resetDictBtn = document.getElementById('resetDictBtn');
 
 // Cargar configuración inicial y añadir listeners
 chrome.storage.sync.get({ 
@@ -50,10 +52,51 @@ chrome.storage.sync.get({
 
   // Concurrency
   concurrencyInput.value = items.concurrency;
-  concurrencyVal.textContent = items.concurrency;
-  concurrencyInput.addEventListener('input', (e) => {
-    concurrencyVal.textContent = e.target.value;
-    saveOptions();
+  concurrencyInput.addEventListener('change', saveOptions);
+});
+
+// Cargar estado del diccionario
+chrome.storage.session.get(['customDictName'], (result) => {
+  if (result.customDictName) {
+    dictStatus.textContent = `Uso: ${result.customDictName}`;
+    resetDictBtn.style.display = 'inline-block';
+  }
+});
+
+// Listeners para diccionario personalizado
+customDictFile.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const text = event.target.result;
+    const lines = text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('#'));
+
+    if (lines.length === 0) {
+      alert('El archivo está vacío o no contiene palabras válidas.');
+      return;
+    }
+
+    chrome.storage.session.set({ 
+      customWordlist: lines,
+      customDictName: file.name + ` (${lines.length} palabras)`
+    }, () => {
+      dictStatus.textContent = `Uso: ${file.name} (${lines.length} palabras)`;
+      resetDictBtn.style.display = 'inline-block';
+      customDictFile.value = ''; // Reset input
+      alert('Diccionario cargado correctamente (Sesión).');
+    });
+  };
+  reader.readAsText(file);
+});
+
+resetDictBtn.addEventListener('click', () => {
+  chrome.storage.session.remove(['customWordlist', 'customDictName'], () => {
+    dictStatus.textContent = 'Uso: Default';
+    resetDictBtn.style.display = 'none';
   });
 });
 

@@ -38,9 +38,13 @@ async function startScan(baseUrl, tabId) {
     concurrency: 10
   });
 
+  // Obtener wordlist (custom o default)
+  const { customWordlist } = await chrome.storage.session.get(['customWordlist']);
+  const currentWordlist = customWordlist || wordlist;
+
   // Generar lista de tareas (combinación de palabras y extensiones)
   const tasks = [];
-  for (const word of wordlist) {
+  for (const word of currentWordlist) {
     for (const ext of allowedExtensions) {
       tasks.push({ word, ext });
     }

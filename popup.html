@@ -161,9 +161,18 @@
 
     <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Velocidad (Rate Limit):</p>
     <div class="option-item" style="display: block;">
-      <label style="margin-bottom: 5px; display: block;">Concurrencia máxima:</label>
-      <input type="range" id="concurrency" min="1" max="50" value="10" style="width: 100%;">
-      <div style="text-align: right; font-size: 0.85em; color: #555;"><span id="concurrencyVal">10</span> hilos</div>
+      <label style="margin-bottom: 5px; display: block;">Concurrencia máxima (hilos):</label>
+      <input type="number" id="concurrency" min="1" value="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+    </div>
+
+    <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Diccionario:</p>
+    <div class="option-item" style="display: block;">
+      <label style="margin-bottom: 5px; display: block;">Cargar diccionario personalizado (.txt):</label>
+      <input type="file" id="customDictFile" accept=".txt" style="width: 100%; margin-bottom: 5px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+        <span id="dictStatus" style="font-size: 0.85em; color: #666;">Uso: Default</span>
+        <button id="resetDictBtn" style="padding: 4px 8px; font-size: 0.8em; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 3px; display: none;">Reset</button>
+      </div>
     </div>
   </div>
 
