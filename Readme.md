@@ -13,7 +13,7 @@ Esta herramienta aunque no vaya a proporcionar las capacidades que tienen las an
 
 ## Objetivos / TO-DO
 
-- [ ] Fetch a rutas de la pagina desde un diccionario hardcodeado.
+- [x] Fetch a rutas de la pagina desde un diccionario hardcodeado.
 - [ ] Uso de un diccionario subido por el usuario o remoto.
 - [ ] Soporte para extensiones de archivo.
 - [ ] Web crawling.
