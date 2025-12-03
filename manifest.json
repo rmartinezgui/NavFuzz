@@ -1,0 +1,25 @@
+{
+  "name": "NavFuzz",
+  "description": "Navigation Fuzzer for Web Testing",
+  "version": "0.1",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/images/Navfuzz16.png",
+      "32": "/images/Navfuzz32.png",
+      "48": "/images/Navfuzz48.png",
+      "128": "/images/Navfuzz128.png"
+    }
+  },
+  "icons": {
+    "16": "/images/Navfuzz16.png",
+    "32": "/images/Navfuzz32.png",
+    "48": "/images/Navfuzz48.png",
+    "128": "/images/Navfuzz128.png"
+  }
+}
