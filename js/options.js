@@ -31,6 +31,16 @@ export async function initOptions() {
       <div class="option-item"><label><input type="checkbox" class="status-code" value="403"> 403 (Forbidden)</label></div>
       <div class="option-item"><label><input type="checkbox" class="status-code" value="500"> 500 (Server Error)</label></div>
 
+      <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Filtros de Contenido (Excluir):</p>
+      <div class="option-item" style="display: block;">
+        <label style="margin-bottom: 5px; display: block;">Líneas (sep. por comas):</label>
+        <input type="text" id="excludeLines" placeholder="Ej: 10, 25" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+      </div>
+      <div class="option-item" style="display: block;">
+        <label style="margin-bottom: 5px; display: block;">Palabras (sep. por comas):</label>
+        <input type="text" id="excludeWords" placeholder="Ej: 50, 100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+      </div>
+
       <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Extensiones a probar:</p>
       <div class="option-item"><label><input type="checkbox" class="extension" value=""> (sin extensión)</label></div>
       <div class="option-item"><label><input type="checkbox" class="extension" value=".php"> .php</label></div>
@@ -87,13 +97,17 @@ export async function initOptions() {
   const customDictFile = document.getElementById('customDictFile');
   const dictStatus = document.getElementById('dictStatus');
   const resetDictBtn = document.getElementById('resetDictBtn');
+  const excludeLinesInput = document.getElementById('excludeLines');
+  const excludeWordsInput = document.getElementById('excludeWords');
 
   // Cargar configuración inicial
   const items = await getSyncStorage({ 
     allowedStatuses: [200, 403], 
     allowedExtensions: [''],
     concurrency: 10,
-    scanMode: 'dir'
+    scanMode: 'dir',
+    excludeLines: [],
+    excludeWords: []
   });
 
   // Status Codes
@@ -117,6 +131,13 @@ export async function initOptions() {
     radio.checked = radio.value === items.scanMode;
     radio.addEventListener('change', saveOptions);
   });
+
+  // Exclude Filters
+  excludeLinesInput.value = items.excludeLines.join(', ');
+  excludeLinesInput.addEventListener('change', saveOptions);
+  
+  excludeWordsInput.value = items.excludeWords.join(', ');
+  excludeWordsInput.addEventListener('change', saveOptions);
 
   // Cargar estado del diccionario
   const sessionResult = await getSessionStorage(['customDictName']);
@@ -173,7 +194,13 @@ export async function initOptions() {
     const concurrency = parseInt(concurrencyInput.value);
     
     const scanMode = Array.from(scanModeRadios).find(r => r.checked).value;
+
+    const excludeLinesStr = excludeLinesInput.value;
+    const excludeWordsStr = excludeWordsInput.value;
+
+    const excludeLines = excludeLinesStr.split(/[,;\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    const excludeWords = excludeWordsStr.split(/[,;\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
     
-    setSyncStorage({ allowedStatuses, allowedExtensions, concurrency, scanMode });
+    setSyncStorage({ allowedStatuses, allowedExtensions, concurrency, scanMode, excludeLines, excludeWords });
   }
 }

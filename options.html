@@ -29,6 +29,14 @@
     <label><input type="checkbox" class="status-code" value="500"> 500 (Internal Server Error)</label>
   </div>
 
+  <div class="option-group">
+    <h3>Filtros de Contenido (Excluir)</h3>
+    <p>Introduce números separados por comas para excluir resultados (útil para evitar falsos positivos):</p>
+    
+    <label>Líneas: <input type="text" id="excludeLines" placeholder="Ej: 10, 25" style="width: 100%; box-sizing: border-box; margin-top: 5px;"></label>
+    <label style="margin-top: 10px;">Palabras: <input type="text" id="excludeWords" placeholder="Ej: 50, 100" style="width: 100%; box-sizing: border-box; margin-top: 5px;"></label>
+  </div>
+
   <button id="save">Guardar Configuración</button>
   <div id="status">Guardado correctamente</div>
 

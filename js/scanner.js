@@ -8,7 +8,10 @@ export function initScanner() {
   scannerContainer.innerHTML = `
     <div id="target">Target: Detectando...</div>
     
-    <button id="startBtn" class="action-btn">Iniciar Fuzzing</button>
+    <div style="display: flex; gap: 10px;">
+      <button id="startBtn" class="action-btn">Iniciar Fuzzing</button>
+      <button id="stopBtn" class="action-btn" style="background-color: #dc3545; display: none;">Detener</button>
+    </div>
     
     <div id="stats-container" style="display: none; margin-top: 10px; font-size: 0.8em; color: #555; background: #e9ecef; padding: 8px; border-radius: 4px;">
       <div style="display: flex; justify-content: space-between;">
@@ -24,6 +27,7 @@ export function initScanner() {
   `;
 
   const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
   const statusDiv = document.getElementById('status');
   const resultsList = document.getElementById('results');
   const targetDiv = document.getElementById('target');
@@ -48,8 +52,12 @@ export function initScanner() {
 
   function checkScanStatus() {
     chrome.runtime.sendMessage({ action: 'get_status', tabId: currentTab.id }, (response) => {
-      if (response.status === 'running') {
+      if (response.status === 'running' || response.status === 'stopping') {
         restoreScanState(response);
+        if (response.status === 'stopping') {
+          stopBtn.disabled = true;
+          statusDiv.textContent = 'Deteniendo...';
+        }
       } else {
         // Si no está corriendo, cargar resultados guardados si existen
         loadSavedResults();
@@ -67,7 +75,7 @@ export function initScanner() {
     
     if (saved && saved.length > 0) {
       resultsList.innerHTML = '';
-      saved.forEach(item => addResult(item.word, item.status, item.url));
+      saved.forEach(item => addResult(item.word, item.status, item.url, item.lines, item.words));
       statusDiv.textContent = `Resultados anteriores cargados: ${saved.length}`;
     } else {
       statusDiv.textContent = 'Listo para escanear';
@@ -75,13 +83,15 @@ export function initScanner() {
   }
 
   function restoreScanState(state) {
-    startBtn.disabled = true;
+    startBtn.style.display = 'none';
+    stopBtn.style.display = 'block';
+    stopBtn.disabled = false;
     statsContainer.style.display = 'block';
     statusDiv.textContent = 'Escaneando (en segundo plano)...';
     
     // Restaurar resultados ya encontrados
     resultsList.innerHTML = '';
-    state.results.forEach(item => addResult(item.word, item.status, item.url));
+    state.results.forEach(item => addResult(item.word, item.status, item.url, item.lines, item.words));
     
     updateStatsUI(state.completed, state.total, state.startTime);
   }
@@ -91,7 +101,9 @@ export function initScanner() {
     
     const url = new URL(currentTab.url);
     
-    startBtn.disabled = true;
+    startBtn.style.display = 'none';
+    stopBtn.style.display = 'block';
+    stopBtn.disabled = false;
     resultsList.innerHTML = '';
     statusDiv.textContent = 'Iniciando escaneo...';
     statsContainer.style.display = 'block';
@@ -104,20 +116,41 @@ export function initScanner() {
     });
   });
 
+  stopBtn.addEventListener('click', () => {
+    if (!currentTab) return;
+    
+    stopBtn.disabled = true;
+    statusDiv.textContent = 'Deteniendo...';
+    
+    chrome.runtime.sendMessage({ 
+      action: 'stop_scan', 
+      tabId: currentTab.id 
+    });
+  });
+
   // Escuchar actualizaciones del background
   chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'scan_update' && currentTab && message.tabId === currentTab.id) {
       
       if (message.type === 'found') {
-        addResult(message.data.word, message.data.status, message.data.url);
+        addResult(message.data.word, message.data.status, message.data.url, message.data.lines, message.data.words);
       } else if (message.type === 'progress') {
         updateStatsUI(message.completed, message.total, message.startTime);
       } else if (message.type === 'complete') {
         statusDiv.textContent = `Escaneo completo. Encontrados: ${message.results.length}`;
-        startBtn.disabled = false;
+        resetUI();
+      } else if (message.type === 'stopped') {
+        statusDiv.textContent = `Escaneo detenido. Encontrados: ${message.results.length}`;
+        resetUI();
       }
     }
   });
+
+  function resetUI() {
+    startBtn.style.display = 'block';
+    stopBtn.style.display = 'none';
+    stopBtn.disabled = false;
+  }
 
   function updateStatsUI(completed, total, startTime) {
     const now = Date.now();
@@ -129,7 +162,7 @@ export function initScanner() {
     speedVal.textContent = speed.toFixed(1);
   }
 
-  function addResult(word, status, url) {
+  function addResult(word, status, url, lines, words) {
     const li = document.createElement('li');
     
     const link = document.createElement('a');
@@ -145,7 +178,11 @@ export function initScanner() {
     link.className = 'found';
     
     const statusSpan = document.createElement('span');
-    statusSpan.textContent = `(${status})`;
+    let infoText = `(${status})`;
+    if (lines !== undefined && words !== undefined) {
+        infoText += ` [L:${lines} W:${words}]`;
+    }
+    statusSpan.textContent = infoText;
     statusSpan.className = 'status-code';
     
     li.appendChild(link);

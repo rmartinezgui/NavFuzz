@@ -9,7 +9,13 @@ document.getElementById('save').addEventListener('click', () => {
     }
   });
 
-  chrome.storage.sync.set({ allowedStatuses }, () => {
+  const excludeLinesStr = document.getElementById('excludeLines').value;
+  const excludeWordsStr = document.getElementById('excludeWords').value;
+
+  const excludeLines = excludeLinesStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  const excludeWords = excludeWordsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+
+  chrome.storage.sync.set({ allowedStatuses, excludeLines, excludeWords }, () => {
     const status = document.getElementById('status');
     status.style.opacity = '1';
     setTimeout(() => {
@@ -20,7 +26,11 @@ document.getElementById('save').addEventListener('click', () => {
 
 // Cargar opciones
 document.addEventListener('DOMContentLoaded', () => {
-  chrome.storage.sync.get({ allowedStatuses: [200, 403] }, (items) => {
+  chrome.storage.sync.get({ 
+    allowedStatuses: [200, 403],
+    excludeLines: [],
+    excludeWords: []
+  }, (items) => {
     const checkboxes = document.querySelectorAll('.status-code');
     checkboxes.forEach((checkbox) => {
       if (items.allowedStatuses.includes(parseInt(checkbox.value))) {
@@ -29,5 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.checked = false;
       }
     });
+
+    document.getElementById('excludeLines').value = items.excludeLines.join(', ');
+    document.getElementById('excludeWords').value = items.excludeWords.join(', ');
   });
 });
