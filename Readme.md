@@ -14,11 +14,15 @@ Esta herramienta aunque no vaya a proporcionar las capacidades que tienen las an
 ## Objetivos / TO-DO
 
 - [x] Fetch a rutas de la pagina desde un diccionario hardcodeado.
-- [ ] Uso de un diccionario subido por el usuario o remoto.
-- [ ] Soporte para extensiones de archivo.
-- [ ] Web crawling.
+- [x] Uso de un diccionario subido por el usuario o remoto.
+- [x] Soporte para extensiones de archivo.
+- [x] Web crawling.
 - [ ] Recursividad en la busqueda de directorios.
 
 ## Uso
 
-Aqui irán imagenes de la aplicacion y apartados.
+| Fuzzing | Detección de tecnologias | Configuración |
+|---------|----------|----------|
+| <img src="https://github.com/user-attachments/assets/f508f830-772d-40db-b419-90737c390a6a" width="250"> | <img src="https://github.com/user-attachments/assets/fca2d471-51d6-4e39-bbe8-030026b223bc" width="250"> | <img src="https://github.com/user-attachments/assets/626c54a4-b9bb-483f-8b92-2a6381c0fb6c" width="250"> |
+
+
