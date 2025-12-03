@@ -224,6 +224,31 @@ chrome.runtime.onMessage.addListener((message) => {
       statusDiv.textContent = `Escaneo completo. Encontrados: ${message.results.length}`;
       startBtn.disabled = false;
     }
+  } else if (message.action === 'crawl_complete') {
+    if (startCrawlBtn) startCrawlBtn.disabled = false;
+    if (crawlStatus) crawlStatus.textContent = `Crawl completo. Encontrados: ${message.results.length}`;
+    
+    if (crawlResults) {
+      message.results.forEach(url => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.textContent = url;
+        a.style.wordBreak = 'break-all';
+        a.style.color = '#007bff';
+        a.style.textDecoration = 'none';
+        
+        li.appendChild(a);
+        li.style.padding = '8px';
+        li.style.borderBottom = '1px solid #eee';
+        
+        crawlResults.appendChild(li);
+      });
+    }
+  } else if (message.action === 'crawl_error') {
+    if (startCrawlBtn) startCrawlBtn.disabled = false;
+    if (crawlStatus) crawlStatus.textContent = `Error: ${message.error}`;
   }
 });
 
@@ -260,3 +285,31 @@ function addResult(word, status, url) {
   li.appendChild(statusSpan);
   resultsList.appendChild(li);
 }
+
+// --- Crawler Logic ---
+const startCrawlBtn = document.getElementById('startCrawlBtn');
+const crawlStatus = document.getElementById('crawl-status');
+const crawlResults = document.getElementById('crawl-results');
+const crawlTarget = document.getElementById('crawl-target');
+
+if (startCrawlBtn) {
+  startCrawlBtn.addEventListener('click', () => {
+    if (!currentTab) return;
+    
+    startCrawlBtn.disabled = true;
+    crawlResults.innerHTML = '';
+    crawlStatus.textContent = 'Crawling...';
+    
+    chrome.runtime.sendMessage({
+      action: 'start_crawl',
+      tabId: currentTab.id
+    });
+  });
+}
+
+// Actualizar target del crawler
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  if (tabs[0] && crawlTarget) {
+    crawlTarget.textContent = `Target: ${tabs[0].url}`;
+  }
+});
