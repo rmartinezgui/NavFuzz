@@ -1,7 +1,7 @@
 let wordlist = [];
 
 // Cargar wordlist al iniciar el service worker
-const wordlistPromise = fetch('common.txt')
+fetch('common.txt')
   .then(response => response.text())
   .then(text => {
     wordlist = text.split('\n')
@@ -24,46 +24,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'get_status') {
     const scanState = activeScans[request.tabId];
     sendResponse(scanState || { status: 'idle' });
-  } else if (request.action === 'start_crawl') {
-    startCrawl(request.tabId);
-    sendResponse({ status: 'crawling_started' });
   }
   return true;
 });
 
-async function startCrawl(tabId) {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['webcrawling.js']
-    });
-    
-    const links = results[0].result;
-    console.log(`[NavFuzz Background] Crawl completed. ${links.length} links found.`);
-    
-    chrome.runtime.sendMessage({
-      action: 'crawl_complete',
-      results: links
-    }).catch(() => {});
-    
-  } catch (err) {
-    console.error('Crawl failed', err);
-    chrome.runtime.sendMessage({
-      action: 'crawl_error',
-      error: err.message
-    }).catch(() => {});
-  }
-}
-
 async function startScan(baseUrl, tabId) {
   if (activeScans[tabId] && activeScans[tabId].status === 'running') return;
 
-  // Esperar a que se cargue el wordlist
-  await wordlistPromise;
-
   // Obtener configuración
   const { allowedStatuses, allowedExtensions, concurrency, scanMode } = await chrome.storage.sync.get({ 
-
     allowedStatuses: [200, 403],
     allowedExtensions: [''],
     concurrency: 10,
