@@ -141,6 +141,7 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="scanner">Scanner</button>
+    <button class="tab-btn" data-tab="crawler">Crawler</button>
     <button class="tab-btn" data-tab="options">Opciones</button>
   </div>
 
@@ -159,11 +160,19 @@
     </div>
 
     <div id="status">Listo para escanear</div>
-    
     <ul id="results"></ul>
   </div>
 
+  <!-- Tab Crawler -->
+  <div id="crawler" class="tab-content">
+    <div id="crawl-target">Target: Detectando...</div>
+    <button id="startCrawlBtn" class="action-btn">Iniciar Crawling</button>
+    <div id="crawl-status">Listo para crawlear</div>
+    <ul id="crawl-results" style="margin-top: 15px; padding: 0; list-style: none; max-height: 250px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 4px;"></ul>
+  </div>
+
   <!-- Tab Opciones -->
+  <div id="options" class="tab-content">
   <div id="options" class="tab-content">
     <div class="sub-tabs">
       <button class="sub-tab-btn active" data-subtab="opt-general">Filtros</button>

@@ -1,7 +1,7 @@
 let wordlist = [];
 
 // Cargar wordlist al iniciar el service worker
-fetch('common.txt')
+const wordlistPromise = fetch('common.txt')
   .then(response => response.text())
   .then(text => {
     wordlist = text.split('\n')
@@ -24,15 +24,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'get_status') {
     const scanState = activeScans[request.tabId];
     sendResponse(scanState || { status: 'idle' });
+  } else if (request.action === 'start_crawl') {
+    startCrawl(request.tabId);
+    sendResponse({ status: 'crawling_started' });
   }
   return true;
 });
 
+async function startCrawl(tabId) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['webcrawling.js']
+    });
+    
+    const links = results[0].result;
+    console.log(`[NavFuzz Background] Crawl completed. ${links.length} links found.`);
+    
+    chrome.runtime.sendMessage({
+      action: 'crawl_complete',
+      results: links
+    }).catch(() => {});
+    
+  } catch (err) {
+    console.error('Crawl failed', err);
+    chrome.runtime.sendMessage({
+      action: 'crawl_error',
+      error: err.message
+    }).catch(() => {});
+  }
+}
+
 async function startScan(baseUrl, tabId) {
   if (activeScans[tabId] && activeScans[tabId].status === 'running') return;
 
+  // Esperar a que se cargue el wordlist
+  await wordlistPromise;
+
   // Obtener configuración
-  const { allowedStatuses, allowedExtensions, concurrency } = await chrome.storage.sync.get({ 
+  let { allowedStatuses, allowedExtensions, concurrency } = await chrome.storage.sync.get({ 
     allowedStatuses: [200, 403],
     allowedExtensions: [''],
     concurrency: 10
@@ -41,6 +71,14 @@ async function startScan(baseUrl, tabId) {
   // Obtener wordlist (custom o default)
   const { customWordlist } = await chrome.storage.session.get(['customWordlist']);
   const currentWordlist = customWordlist || wordlist;
+
+  console.log(`[NavFuzz] Config: Extensions=${JSON.stringify(allowedExtensions)}, Wordlist=${currentWordlist.length}`);
+
+  // Si no hay extensiones seleccionadas, forzar al menos la cadena vacía
+  if (!allowedExtensions || allowedExtensions.length === 0) {
+    console.log('[NavFuzz] No extensions selected. Defaulting to ""');
+    allowedExtensions = [''];
+  }
 
   // Generar lista de tareas (combinación de palabras y extensiones)
   const tasks = [];
