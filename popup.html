@@ -146,84 +146,14 @@
 
   <!-- Tab Scanner -->
   <div id="scanner" class="tab-content active">
-    <div id="target">Target: Detectando...</div>
-    
-    <button id="startBtn" class="action-btn">Iniciar Fuzzing</button>
-    
-    <div id="stats-container" style="display: none; margin-top: 10px; font-size: 0.8em; color: #555; background: #e9ecef; padding: 8px; border-radius: 4px;">
-      <div style="display: flex; justify-content: space-between;">
-        <span>Progreso: <b id="progressVal">0/0</b></span>
-        <span>Tiempo: <b id="timeVal">0s</b></span>
-      </div>
-      <div style="margin-top: 4px;">Velocidad: <b id="speedVal">0</b> req/s</div>
-    </div>
-
-    <div id="status">Listo para escanear</div>
-    
-    <ul id="results"></ul>
+    <!-- El contenido se inyecta dinámicamente desde js/scanner.js -->
   </div>
 
   <!-- Tab Opciones -->
   <div id="options" class="tab-content">
-    <div class="sub-tabs">
-      <button class="sub-tab-btn active" data-subtab="opt-general">Filtros</button>
-      <button class="sub-tab-btn" data-subtab="opt-perf">Rendimiento</button>
-      <button class="sub-tab-btn" data-subtab="opt-dict">Diccionario</button>
-    </div>
-
-    <!-- Sub-tab General -->
-    <div id="opt-general" class="sub-tab-content active">
-      <p style="margin-top: 0; color: #666; font-size: 0.9em;">Modo de Escaneo:</p>
-      <div class="option-item">
-        <label><input type="radio" name="scanMode" value="dir" checked> Directorios/Archivos</label>
-      </div>
-      <div class="option-item">
-        <label><input type="radio" name="scanMode" value="sub"> Subdominios</label>
-      </div>
-
-      <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Selecciona los códigos de estado a reportar:</p>
-      
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="200"> 200 (OK)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="301"> 301 (Moved Permanently)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="302"> 302 (Found)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="401"> 401 (Unauthorized)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="403"> 403 (Forbidden)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="status-code" value="500"> 500 (Server Error)</label></div>
-
-      <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Extensiones a probar:</p>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=""> (sin extensión)</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".php"> .php</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".html"> .html</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".txt"> .txt</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".json"> .json</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".js"> .js</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".bak"> .bak</label></div>
-      <div class="option-item"><label><input type="checkbox" class="extension" value=".zip"> .zip</label></div>
-    </div>
-
-    <!-- Sub-tab Rendimiento -->
-    <div id="opt-perf" class="sub-tab-content">
-      <p style="margin-top: 0; color: #666; font-size: 0.9em;">Velocidad (Rate Limit):</p>
-      <div class="option-item" style="display: block;">
-        <label style="margin-bottom: 5px; display: block;">Concurrencia máxima (hilos):</label>
-        <input type="number" id="concurrency" min="1" value="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-      </div>
-    </div>
-
-    <!-- Sub-tab Diccionario -->
-    <div id="opt-dict" class="sub-tab-content">
-      <p style="margin-top: 0; color: #666; font-size: 0.9em;">Diccionario:</p>
-      <div class="option-item" style="display: block;">
-        <label style="margin-bottom: 5px; display: block;">Cargar diccionario personalizado (.txt):</label>
-        <input type="file" id="customDictFile" accept=".txt" style="width: 100%; margin-bottom: 5px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-          <span id="dictStatus" style="font-size: 0.85em; color: #666;">Uso: Default</span>
-          <button id="resetDictBtn" style="padding: 4px 8px; font-size: 0.8em; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 3px; display: none;">Reset</button>
-        </div>
-      </div>
-    </div>
+    <!-- El contenido se inyecta dinámicamente desde js/options.js -->
   </div>
 
-  <script src="popup.js"></script>
+  <script type="module" src="popup.js"></script>
 </body>
 </html>
