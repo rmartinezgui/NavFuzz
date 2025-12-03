@@ -56,7 +56,14 @@ async function startScan(baseUrl, tabId) {
   // Generar lista de tareas
   const tasks = [];
   
-  if (scanMode === 'sub') {
+  if (baseUrl.includes('FUZZ')) {
+    // Modo Custom: Reemplazar FUZZ en la URL
+    for (const word of currentWordlist) {
+      for (const ext of allowedExtensions) {
+        tasks.push({ word, ext, type: 'custom' });
+      }
+    }
+  } else if (scanMode === 'sub') {
     // Modo Subdominios: word.domain.com
     const urlObj = new URL(baseUrl);
     let domain = urlObj.hostname;
@@ -99,7 +106,10 @@ async function startScan(baseUrl, tabId) {
     let targetUrl;
     let displayWord;
 
-    if (task.type === 'sub') {
+    if (task.type === 'custom') {
+      targetUrl = baseUrl.replace('FUZZ', task.word + task.ext);
+      displayWord = task.word + task.ext;
+    } else if (task.type === 'sub') {
       targetUrl = `${task.protocol}//${task.word}.${task.domain}`;
       displayWord = `${task.word}.${task.domain}`;
     } else {

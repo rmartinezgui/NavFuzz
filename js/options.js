@@ -14,15 +14,7 @@ export async function initOptions() {
 
     <!-- Sub-tab General -->
     <div id="opt-general" class="sub-tab-content active">
-      <p style="margin-top: 0; color: #666; font-size: 0.9em;">Modo de Escaneo:</p>
-      <div class="option-item">
-        <label><input type="radio" name="scanMode" value="dir" checked> Directorios/Archivos</label>
-      </div>
-      <div class="option-item">
-        <label><input type="radio" name="scanMode" value="sub"> Subdominios</label>
-      </div>
-
-      <p style="margin-top: 15px; color: #666; font-size: 0.9em;">Selecciona los códigos de estado a reportar:</p>
+      <p style="margin-top: 0; color: #666; font-size: 0.9em;">Selecciona los códigos de estado a reportar:</p>
       
       <div class="option-item"><label><input type="checkbox" class="status-code" value="200"> 200 (OK)</label></div>
       <div class="option-item"><label><input type="checkbox" class="status-code" value="301"> 301 (Moved Permanently)</label></div>
@@ -93,7 +85,6 @@ export async function initOptions() {
   const checkboxes = document.querySelectorAll('.status-code');
   const extCheckboxes = document.querySelectorAll('.extension');
   const concurrencyInput = document.getElementById('concurrency');
-  const scanModeRadios = document.querySelectorAll('input[name="scanMode"]');
   const customDictFile = document.getElementById('customDictFile');
   const dictStatus = document.getElementById('dictStatus');
   const resetDictBtn = document.getElementById('resetDictBtn');
@@ -105,7 +96,6 @@ export async function initOptions() {
     allowedStatuses: [200, 403], 
     allowedExtensions: [''],
     concurrency: 10,
-    scanMode: 'dir',
     excludeLines: [],
     excludeWords: []
   });
@@ -125,12 +115,6 @@ export async function initOptions() {
   // Concurrency
   concurrencyInput.value = items.concurrency;
   concurrencyInput.addEventListener('change', saveOptions);
-
-  // Scan Mode
-  scanModeRadios.forEach((radio) => {
-    radio.checked = radio.value === items.scanMode;
-    radio.addEventListener('change', saveOptions);
-  });
 
   // Exclude Filters
   excludeLinesInput.value = items.excludeLines.join(', ');
@@ -193,14 +177,12 @@ export async function initOptions() {
     
     const concurrency = parseInt(concurrencyInput.value);
     
-    const scanMode = Array.from(scanModeRadios).find(r => r.checked).value;
-
     const excludeLinesStr = excludeLinesInput.value;
     const excludeWordsStr = excludeWordsInput.value;
 
     const excludeLines = excludeLinesStr.split(/[,;\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
     const excludeWords = excludeWordsStr.split(/[,;\s]+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n));
     
-    setSyncStorage({ allowedStatuses, allowedExtensions, concurrency, scanMode, excludeLines, excludeWords });
+    setSyncStorage({ allowedStatuses, allowedExtensions, concurrency, excludeLines, excludeWords });
   }
 }

@@ -1,4 +1,4 @@
-import { getLocalStorage } from './storage.js';
+import { getLocalStorage, getSyncStorage, setSyncStorage } from './storage.js';
 
 export function initScanner() {
   const scannerContainer = document.getElementById('scanner');
@@ -6,7 +6,24 @@ export function initScanner() {
 
   // Inyectar estructura visual
   scannerContainer.innerHTML = `
-    <div id="target">Target: Detectando...</div>
+    <div style="margin-bottom: 10px; background: #fff; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      <div style="margin-bottom: 8px; font-size: 0.9em; color: #333;">Modo de Escaneo:</div>
+      <div style="display: flex; gap: 15px;">
+        <label style="cursor: pointer; display: flex; align-items: center;">
+          <input type="radio" name="scannerMode" value="dir" checked style="margin-right: 5px;"> Directorios
+        </label>
+        <label style="cursor: pointer; display: flex; align-items: center;">
+          <input type="radio" name="scannerMode" value="sub" style="margin-right: 5px;"> Subdominios
+        </label>
+      </div>
+    </div>
+
+    <div id="urlInputContainer" style="margin-bottom: 10px;">
+      <label style="font-size: 0.8em; color: #666; display: block; margin-bottom: 4px;">
+        Ruta (Base: <span id="baseUrlDisplay" style="color: #007bff;"></span>):
+      </label>
+      <input type="text" id="urlInput" placeholder="/FUZZ" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-family: monospace;">
+    </div>
     
     <div style="display: flex; gap: 10px;">
       <button id="startBtn" class="action-btn">Iniciar Fuzzing</button>
@@ -30,25 +47,55 @@ export function initScanner() {
   const stopBtn = document.getElementById('stopBtn');
   const statusDiv = document.getElementById('status');
   const resultsList = document.getElementById('results');
-  const targetDiv = document.getElementById('target');
+  const urlInput = document.getElementById('urlInput');
+  const urlInputContainer = document.getElementById('urlInputContainer');
+  const baseUrlDisplay = document.getElementById('baseUrlDisplay');
   const statsContainer = document.getElementById('stats-container');
   const progressVal = document.getElementById('progressVal');
   const timeVal = document.getElementById('timeVal');
   const speedVal = document.getElementById('speedVal');
+  const modeRadios = document.querySelectorAll('input[name="scannerMode"]');
 
   let currentTab = null;
 
   // Inicialización
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     currentTab = tabs[0];
     if (currentTab) {
       const url = new URL(currentTab.url);
-      targetDiv.textContent = `Target: ${url.origin}`;
+      if (baseUrlDisplay) baseUrlDisplay.textContent = url.origin;
       
+      // Cargar modo guardado
+      const { scanMode } = await getSyncStorage({ scanMode: 'dir' });
+      
+      modeRadios.forEach(radio => {
+        radio.checked = radio.value === scanMode;
+        radio.addEventListener('change', handleModeChange);
+      });
+      
+      // Aplicar estado inicial de UI
+      updateUIForMode(scanMode);
+
       // Comprobar estado del escaneo en background
       checkScanStatus();
     }
   });
+
+  function handleModeChange(e) {
+    const newMode = e.target.value;
+    setSyncStorage({ scanMode: newMode });
+    updateUIForMode(newMode);
+  }
+
+  function updateUIForMode(mode) {
+    if (mode === 'sub') {
+      urlInputContainer.style.display = 'none';
+      urlInput.value = ''; // Limpiar input al cambiar a subdominios
+    } else {
+      urlInputContainer.style.display = 'block';
+      urlInput.placeholder = "/FUZZ";
+    }
+  }
 
   function checkScanStatus() {
     chrome.runtime.sendMessage({ action: 'get_status', tabId: currentTab.id }, (response) => {
@@ -96,10 +143,29 @@ export function initScanner() {
     updateStatsUI(state.completed, state.total, state.startTime);
   }
 
-  startBtn.addEventListener('click', () => {
+  startBtn.addEventListener('click', async () => {
     if (!currentTab) return;
     
+    const { scanMode } = await getSyncStorage({ scanMode: 'dir' });
     const url = new URL(currentTab.url);
+    let inputPath = urlInput.value.trim();
+    
+    // Si está vacío, usar /FUZZ por defecto SOLO si no es modo subdominios
+    if (!inputPath && scanMode !== 'sub') {
+        inputPath = '/FUZZ';
+    }
+    
+    // Asegurar que empieza por / si no es una URL completa y no está vacío
+    if (inputPath && !inputPath.startsWith('/') && !inputPath.startsWith('http')) {
+        inputPath = '/' + inputPath;
+    }
+
+    let fullUrl;
+    if (inputPath.startsWith('http')) {
+        fullUrl = inputPath;
+    } else {
+        fullUrl = url.origin + inputPath;
+    }
     
     startBtn.style.display = 'none';
     stopBtn.style.display = 'block';
@@ -111,7 +177,7 @@ export function initScanner() {
     // Enviar mensaje al background para iniciar
     chrome.runtime.sendMessage({ 
       action: 'start_scan', 
-      url: url.origin, 
+      url: fullUrl, 
       tabId: currentTab.id 
     });
   });
