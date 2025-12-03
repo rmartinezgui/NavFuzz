@@ -36,7 +36,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-async function startScan(baseUrl, tabId) {
+async function startScan(rawBaseUrl, tabId) {
+  const baseUrl = rawBaseUrl.trim();
   if (activeScans[tabId] && activeScans[tabId].status === 'running') return;
 
   // Obtener configuración
@@ -55,8 +56,11 @@ async function startScan(baseUrl, tabId) {
 
   // Generar lista de tareas
   const tasks = [];
+  const fuzzRegex = /FUZZ/i;
+  const hasFuzz = fuzzRegex.test(baseUrl);
   
-  if (baseUrl.includes('FUZZ')) {
+  // Detectar FUZZ (case insensitive)
+  if (hasFuzz) {
     // Modo Custom: Reemplazar FUZZ en la URL
     for (const word of currentWordlist) {
       for (const ext of allowedExtensions) {
@@ -107,8 +111,13 @@ async function startScan(baseUrl, tabId) {
     let displayWord;
 
     if (task.type === 'custom') {
-      targetUrl = baseUrl.replace('FUZZ', task.word + task.ext);
-      displayWord = task.word + task.ext;
+      targetUrl = baseUrl.replace(fuzzRegex, task.word + task.ext);
+      try {
+        const urlObj = new URL(targetUrl);
+        displayWord = urlObj.pathname + urlObj.search;
+      } catch (e) {
+        displayWord = task.word + task.ext;
+      }
     } else if (task.type === 'sub') {
       targetUrl = `${task.protocol}//${task.word}.${task.domain}`;
       displayWord = `${task.word}.${task.domain}`;
