@@ -2,13 +2,28 @@ const startBtn = document.getElementById('startBtn');
 const statusDiv = document.getElementById('status');
 const resultsList = document.getElementById('results');
 const targetDiv = document.getElementById('target');
+const statsContainer = document.getElementById('stats-container');
+const progressVal = document.getElementById('progressVal');
+const timeVal = document.getElementById('timeVal');
+const speedVal = document.getElementById('speedVal');
 
-// Lista de directorios comunes para buscar
-const wordlist = [
-  'admin', 'login', 'test', 'dev', 'backup', 'api', 'dashboard', 
-  'user', 'images', 'static', 'assets', 'config', 'db', 'robots.txt', 
-  'sitemap.xml', 'wp-admin', 'phpmyadmin', '.env', '.git', 'private'
-];
+let wordlist = [];
+
+// Cargar wordlist desde common.txt
+fetch('common.txt')
+  .then(response => response.text())
+  .then(text => {
+    wordlist = text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('#'));
+    statusDiv.textContent = `Listo. Wordlist cargada: ${wordlist.length} entradas`;
+  })
+  .catch(err => {
+    console.error('Error cargando wordlist:', err);
+    statusDiv.textContent = 'Error: No se pudo cargar common.txt';
+    // Fallback a una lista mínima si falla
+    wordlist = ['admin', 'login', 'robots.txt'];
+  });
 
 let currentTab = null;
 
@@ -26,18 +41,32 @@ startBtn.addEventListener('click', async () => {
   
   startBtn.disabled = true;
   resultsList.innerHTML = '';
-  statusDiv.textContent = 'Iniciando escaneo...';
+  statusDiv.textContent = 'Escaneando...';
+  statsContainer.style.display = 'block';
   
   const url = new URL(currentTab.url);
   const baseUrl = url.origin;
 
+  let completed = 0;
   let foundCount = 0;
+  const total = wordlist.length;
+  const startTime = performance.now();
 
-  for (const word of wordlist) {
+  // Función para actualizar estadísticas
+  const updateStats = () => {
+    const now = performance.now();
+    const elapsedSeconds = (now - startTime) / 1000;
+    const speed = completed / (elapsedSeconds || 0.001); // Evitar división por cero
+
+    progressVal.textContent = `${completed}/${total}`;
+    timeVal.textContent = `${elapsedSeconds.toFixed(2)}s`;
+    speedVal.textContent = speed.toFixed(1);
+  };
+
+  // Lanzamos todas las peticiones en paralelo
+  const promises = wordlist.map(async (word) => {
     const targetUrl = `${baseUrl}/${word}`;
     try {
-      statusDiv.textContent = `Probando: /${word}`;
-      
       // Usamos fetch con método HEAD para ser más rápidos y ligeros
       const response = await fetch(targetUrl, { method: 'HEAD' });
       
@@ -49,8 +78,14 @@ startBtn.addEventListener('click', async () => {
     } catch (error) {
       console.log(`Error al acceder a ${targetUrl}:`, error);
       // Los errores de red (como bloqueos CORS estrictos) caerán aquí
+    } finally {
+      completed++;
+      updateStats();
     }
-  }
+  });
+
+  // Esperamos a que todas terminen
+  await Promise.all(promises);
   
   statusDiv.textContent = `Escaneo completo. Encontrados: ${foundCount}`;
   startBtn.disabled = false;

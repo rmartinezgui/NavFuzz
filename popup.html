@@ -56,6 +56,15 @@
   <div id="target">Target: Detectando...</div>
   
   <button id="startBtn">Iniciar Fuzzing</button>
+  
+  <div id="stats-container" style="display: none; margin-top: 10px; font-size: 0.8em; color: #555; background: #e9ecef; padding: 8px; border-radius: 4px;">
+    <div style="display: flex; justify-content: space-between;">
+      <span>Progreso: <b id="progressVal">0/0</b></span>
+      <span>Tiempo: <b id="timeVal">0s</b></span>
+    </div>
+    <div style="margin-top: 4px;">Velocidad: <b id="speedVal">0</b> req/s</div>
+  </div>
+
   <div id="status">Listo para escanear</div>
   
   <ul id="results"></ul>
