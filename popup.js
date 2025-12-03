@@ -24,6 +24,21 @@ tabBtns.forEach(btn => {
   });
 });
 
+// Gestión de Sub-Tabs en Opciones
+const subTabBtns = document.querySelectorAll('.sub-tab-btn');
+const subTabContents = document.querySelectorAll('.sub-tab-content');
+
+subTabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    subTabBtns.forEach(b => b.classList.remove('active'));
+    subTabContents.forEach(c => c.classList.remove('active'));
+    
+    btn.classList.add('active');
+    const tabId = btn.getAttribute('data-subtab');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
 // Gestión de opciones de filtrado
 const checkboxes = document.querySelectorAll('.status-code');
 const extCheckboxes = document.querySelectorAll('.extension');
